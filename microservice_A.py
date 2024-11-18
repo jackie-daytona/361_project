@@ -16,19 +16,16 @@ socket.bind("tcp://*:5555")
 
 while True:
     data = socket.recv_json()
-
-    if len(data) > 0:
-        obj = json.loads(data)
-        for sku, quantity in obj.items():
-            if quantity < 5:
-                alert = f"Item {sku} low in stock! Only {quantity} remaining."
-                socket.send_string(alert)
+    obj = json.loads(data)
+    if len(obj) >= 2:           # send sku alert to main program
+        sku, quantity = obj
+        alert = f"Item {sku} low in stock! Only {quantity} remaining."
+        socket.send_string(alert)
         time.sleep(3)
-
-    message = socket.recv()
-    print(f"received request from the client: {message.decode()}")
-    if len(message) > 0:
-        if message.decode() == "Q":
+    else:                       # else send confirmation message and end microservice
+        if obj == "Q":
+            socket.send_string("evaluation complete")
+            print("message received")
             break
 
 context.destroy()
